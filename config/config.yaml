@@ -1,0 +1,5 @@
+asyncHost: testhost.com:8000
+
+asyncSapRoute:
+  - /openapi/isc/v1/delivery/post/ZMM_WMS_SHEN009
+  - /openapi/hello
