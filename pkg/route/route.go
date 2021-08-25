@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"ros/config"
+	"ros/pkg/config"
 	"strconv"
 	"syscall"
 	"time"

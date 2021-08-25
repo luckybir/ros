@@ -1,5 +1,5 @@
 asyncHost: testhost.com:8000
 
 asyncSapRoute:
-  - /openapi/world
   - /openapi/hello
+  - /openapi/world

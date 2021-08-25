@@ -1,9 +1,9 @@
 package main
 
 import (
-	"ros/config"
-	"ros/logger"
-	"ros/route"
+	"ros/pkg/config"
+	"ros/pkg/logger"
+	"ros/pkg/route"
 )
 
 func main() {
