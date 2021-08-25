@@ -18,16 +18,15 @@ import (
 	"time"
 )
 
-
 type SapOpenApiReturn struct {
-	Success string `json:"SUCCESS"`
-	ErrorCode string `json:"ERROR_CODE"`
-	ErrorMessage string `json:"ERROR_MESSAGE"`
-	ExceptionCode string `json:"EXCEPTION_CODE"`
+	Success          string `json:"SUCCESS"`
+	ErrorCode        string `json:"ERROR_CODE"`
+	ErrorMessage     string `json:"ERROR_MESSAGE"`
+	ExceptionCode    string `json:"EXCEPTION_CODE"`
 	ExceptionMessage string `json:"EXCEPTION_MESSAGE"`
-	ExceptionStack string `json:"EXCEPTION_STACK"`
-	ApiStatus string `json:"API_STATUS"`
-	LogID string `json:"LOG_ID"`
+	ExceptionStack   string `json:"EXCEPTION_STACK"`
+	ApiStatus        string `json:"API_STATUS"`
+	LogID            string `json:"LOG_ID"`
 }
 
 type AsyncSapOpenApiHttpRequestInfo struct {
@@ -37,8 +36,8 @@ type AsyncSapOpenApiHttpRequestInfo struct {
 	body   []byte
 }
 
-type AsyncSapOpenApiHttpResponseInfo struct{
-	body []byte
+type AsyncSapOpenApiHttpResponseInfo struct {
+	body       []byte
 	statusCode int
 }
 
@@ -52,6 +51,7 @@ func InitRoute() {
 
 	route.GET("/ping", pingGet)
 	asyncSapRouteInit(route)
+	route.NoRoute(redirectSapOpenAPI)
 
 	srv := &http.Server{
 		Addr:    ":80",
@@ -85,7 +85,7 @@ func InitRoute() {
 func zapLog(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		// some evil middlewares modify this values
+		// some evil middle wares modify this values
 		path := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
 		c.Next()
@@ -114,7 +114,7 @@ func zapLog(logger *zap.Logger) gin.HandlerFunc {
 
 func asyncSapRouteInit(route *gin.Engine) {
 	for _, path := range config.ServerConfig.AsyncSapRoute {
-		route.POST(path, sapOpenApiPost)
+		route.POST(path, asyncSapOpenApiPost)
 	}
 
 }
@@ -123,7 +123,7 @@ func pingGet(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"pong": time.Now().String()})
 }
 
-func sapOpenApiPost(c *gin.Context) {
+func asyncSapOpenApiPost(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	requestBody, err := ioutil.ReadAll(c.Request.Body)
@@ -153,21 +153,17 @@ func sapOpenApiPost(c *gin.Context) {
 	go func(ch chan AsyncSapOpenApiHttpResponseInfo, chClose chan struct{}, requestInfo *AsyncSapOpenApiHttpRequestInfo) {
 
 		responseInfo := asyncToSapOpenApi(requestInfo)
-		//fmt.Println("ready to send chan")
 
 		select {
 		case <-chClose:
-			//fmt.Println("detect chan close")
 		default:
 			ch <- responseInfo
-			//fmt.Println("send chan")
 		}
 
 	}(ch, chClose, requestInfo)
 
 	select {
 	case asyncResponseInfo := <-ch:
-		//fmt.Println("receive chan")
 		c.Writer.Header().Set("Content-Type", "application/json")
 		c.String(asyncResponseInfo.statusCode, string(asyncResponseInfo.body))
 	//case <-time.After(60 * time.Second):
@@ -178,11 +174,9 @@ func sapOpenApiPost(c *gin.Context) {
 	//	}
 	//	c.JSON(http.StatusOK, sapOpenApiReturn)
 	case <-ctx.Done():
-		//fmt.Println("connection close")
 
 	}
 
-	//fmt.Println("close chan")
 	close(ch)
 	close(chClose)
 
@@ -210,10 +204,10 @@ func asyncToSapOpenApi(requestInfo *AsyncSapOpenApiHttpRequestInfo) (responseInf
 	req.Header = requestInfo.header
 	resp, err := client.Do(req)
 	if err != nil {
-		if resp == nil{
+		if resp == nil {
 
-			zap.L().Error(err.Error(), zap.String("resp","nil"))
-		}else{
+			zap.L().Error(err.Error(), zap.String("resp", "nil"))
+		} else {
 			zap.L().Error(err.Error(), zap.Int("statusCode", resp.StatusCode))
 		}
 
@@ -228,7 +222,6 @@ func asyncToSapOpenApi(requestInfo *AsyncSapOpenApiHttpRequestInfo) (responseInf
 
 	defer resp.Body.Close()
 
-	//fmt.Println(resp.StatusCode)
 	responseInfo.body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		zap.L().Error(err.Error())
@@ -246,8 +239,7 @@ func asyncToSapOpenApi(requestInfo *AsyncSapOpenApiHttpRequestInfo) (responseInf
 
 }
 
-func getTodayStockInfoFileName() string {
-	fileName := "stockUpdate" + time.Now().Format("20060102") + ".txt"
-
-	return fileName
+func redirectSapOpenAPI(c *gin.Context) {
+	redirectURL := config.ServerConfig.AsyncHost + c.Request.URL.Path
+	c.Redirect(http.StatusMovedPermanently, redirectURL)
 }

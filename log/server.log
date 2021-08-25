@@ -1,6 +1,0 @@
-{"level":"warn","ts":"2021-08-20T17:20:30.060","caller":"logger/logger.go:33","msg":"ROS start"}
-{"level":"warn","ts":"2021-08-20T17:20:30.063","caller":"config/config.go:27","msg":"async host:testhost.com:8000"}
-{"level":"warn","ts":"2021-08-20T17:20:30.063","caller":"config/config.go:30","msg":"async path:/openapi/world"}
-{"level":"warn","ts":"2021-08-20T17:20:30.063","caller":"config/config.go:30","msg":"async path:/openapi/hello"}
-{"level":"warn","ts":"2021-08-20T17:20:32.575","caller":"route/route.go:74","msg":"Shutdown server..."}
-{"level":"warn","ts":"2021-08-20T17:20:32.589","caller":"route/route.go:82","msg":"Server exiting"}
