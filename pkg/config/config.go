@@ -14,7 +14,7 @@ type Config struct {
 var ServerConfig Config
 
 func InitConfig()  {
-	configFile, err := ioutil.ReadFile("./config/config.yaml")
+	configFile, err := ioutil.ReadFile("./conf/config.yaml")
 	if err != nil {
 		zap.S().Fatalf("read config err:%s", err.Error())
 	}
